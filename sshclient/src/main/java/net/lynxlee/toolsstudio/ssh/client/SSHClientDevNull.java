@@ -7,11 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.air.svnSyncTools.conf.config.ConfigHelper;
-import com.air.svnSyncTools.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.ConnectionMonitor;
@@ -20,10 +17,11 @@ import ch.ethz.ssh2.SCPClient;
 import ch.ethz.ssh2.SCPInputStream;
 import ch.ethz.ssh2.ServerHostKeyVerifier;
 import ch.ethz.ssh2.Session;
+import net.lynxlee.toolsstudio.ssh.util.Util;
 
 public class SSHClientDevNull {
 
-	private static Log log = LogFactory.getLog(SSHClientDevNull.class);
+	private static Logger logger = LoggerFactory.getLogger(SSHClientDevNull.class);
 
 	private static String knownHostPath = "config/known_hosts";
 	private static String idDSAPath = "config/id_dsa";
@@ -36,8 +34,8 @@ public class SSHClientDevNull {
 	}
 
 	/**
-	 * This ServerHostKeyVerifier asks the user on how to proceed if a key
-	 * cannot be found in the in-memory database.
+	 * This ServerHostKeyVerifier asks the user on how to proceed if a key cannot be
+	 * found in the in-memory database.
 	 * 
 	 * @author air
 	 *
@@ -74,7 +72,9 @@ public class SSHClientDevNull {
 				KnownHosts.addHostkeyToFile(new File(knownHostPath), new String[] { hashedHostname },
 						serverHostKeyAlgorithm, serverHostKey);
 			} catch (IOException ignore) {
-				log.error(ignore);
+				if (logger.isErrorEnabled()) {
+					logger.error("添加[known_hosts]文件失败！", ignore);
+				}
 			}
 			return true;
 
@@ -102,6 +102,7 @@ public class SSHClientDevNull {
 	}
 
 	/**
+	 * 从known_hosts文件中读取Hostkeys信息
 	 * 
 	 * @param database
 	 */
@@ -111,7 +112,9 @@ public class SSHClientDevNull {
 			try {
 				database.addHostkeys(knownHostFile);
 			} catch (IOException e) {
-				log.error(e);
+				if (logger.isErrorEnabled()) {
+					logger.error("读取[known_hosts]文件失败!", e);
+				}
 			}
 		}
 	}
@@ -215,7 +218,9 @@ public class SSHClientDevNull {
 			if (!enableDSA && !enableRSA && !enablePWD && !authMethod) {
 				throw new IOException("服务器用户名或密码或证书校验失败,创建服务器连接失败!");
 			} else {
-				log.info("[" + connection.getConnectionInfo() + "]连接创建成功!");
+				if (logger.isInfoEnabled()) {
+					logger.info("[" + connection.getConnectionInfo() + "]连接创建成功!");
+				}
 				return connection;
 			}
 		} catch (IOException e) {
@@ -246,7 +251,7 @@ public class SSHClientDevNull {
 			}
 		} catch (IOException e) {
 			if (e.getMessage().equals("Sorry, this connection is closed.")) {
-				// log.error("Sorry, this connection is closed.", e);
+				// logger.error("Sorry, this connection is closed.", e);
 				throw new ConnectionException("Sorry, this connection is closed.", e);
 				// String host = connection.getHostname();
 				// int port = connection.getPort();
@@ -400,7 +405,7 @@ public class SSHClientDevNull {
 			}
 		} catch (IOException e) {
 			if (e.getMessage().equals("Sorry, this connection is closed.")) {
-				log.error("Sorry, this connection is closed.", e);
+				logger.error("Sorry, this connection is closed.", e);
 			}
 			return true;
 		}
@@ -409,8 +414,6 @@ public class SSHClientDevNull {
 	private class ConnectionMonitorX implements ConnectionMonitor {
 
 		public void connectionLost(Throwable arg0) {
-			
-			
 
 		}
 

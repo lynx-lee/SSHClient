@@ -7,40 +7,35 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Observable;
-import java.util.logging.Logger;
 
-
-//import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.KnownHosts;
 import ch.ethz.ssh2.ServerHostKeyVerifier;
 import ch.ethz.ssh2.Session;
+import net.lynxlee.toolsstudio.ssh.util.Util;
 
 public class SSHClientDevTty {
 
-//	private static Logger logger = LoggerFactory.getLogger(SSHClientDevTty.class);
-	
-	private static Logger logger = Logger.getLogger("SSHClientDevTty");
+	private static Logger logger = LoggerFactory.getLogger(SSHClientDevTty.class);
+
+	// private static Logger logger = Logger.getLogger("SSHClientDevTty");
 
 	private static String knownHostPath = "config/known_hosts";
 	private static String idDSAPath = "config/id_dsa";
 	private static String idRSAPath = "config/id_rsa";
 
-	
-
 	public SSHClientDevTty() {
-		
-		
-		
 		knownHostPath = ConfigHelper.getInstance().getPropertie("ssh.knownHostPath");
 		idDSAPath = ConfigHelper.getInstance().getPropertie("ssh.idDSAPath");
 		idRSAPath = ConfigHelper.getInstance().getPropertie("ssh.idRSAPath");
 	}
 
 	/**
-	 * This ServerHostKeyVerifier asks the user on how to proceed if a key
-	 * cannot be found in the in-memory database.
+	 * This ServerHostKeyVerifier asks the user on how to proceed if a key cannot be
+	 * found in the in-memory database.
 	 * 
 	 * @author air
 	 *
@@ -77,7 +72,9 @@ public class SSHClientDevTty {
 				KnownHosts.addHostkeyToFile(new File(knownHostPath), new String[] { hashedHostname },
 						serverHostKeyAlgorithm, serverHostKey);
 			} catch (IOException ignore) {
-				logger.error(ignore);
+				if (logger.isErrorEnabled()) {
+					logger.error("添加[known_hosts]文件失败！", ignore);
+				}
 			}
 			return true;
 
@@ -109,6 +106,7 @@ public class SSHClientDevTty {
 	}
 
 	/**
+	 * 从known_hosts文件中读取Hostkeys信息
 	 * 
 	 * @param database
 	 */
@@ -118,7 +116,9 @@ public class SSHClientDevTty {
 			try {
 				database.addHostkeys(knownHostFile);
 			} catch (IOException e) {
-				logger.error(e);
+				if (logger.isErrorEnabled()) {
+					logger.error("读取[known_hosts]文件失败!", e);
+				}
 			}
 		}
 	}
@@ -287,7 +287,7 @@ public class SSHClientDevTty {
 					int _x = 0;
 					StringBuffer _sb = new StringBuffer();
 					do {
-//						System.out.print((char)_x);
+						// System.out.print((char)_x);
 						if ((char) _x == '\n' || (char) _x == 32) {
 							_sb.append((char) _x);
 							this.setChanged();
@@ -301,11 +301,15 @@ public class SSHClientDevTty {
 					} while ((_x = br.read()) > 0 || (_x = ebr.read()) > 0);
 
 				} catch (IOException e) {
-					logger.error(e);
+					if (logger.isErrorEnabled()) {
+						logger.error("获取命令执行结果失败!", e);
+					}
 				}
 			} else {
 				// throw new NullPointerException("会话对象[Session]为空!");
-				logger.error("会话对象[Session]为空!");
+				if (logger.isErrorEnabled()) {
+					logger.error("会话对象[Session]为空!");
+				}
 			}
 		}
 
@@ -322,6 +326,9 @@ public class SSHClientDevTty {
 				OutputStream outs = session.getStdin();
 				return outs;
 			} catch (Exception e) {
+				if (logger.isErrorEnabled()) {
+					logger.error("获取输出流失败!", e);
+				}
 			}
 		}
 		return null;
@@ -338,7 +345,9 @@ public class SSHClientDevTty {
 				outs.flush();
 				outs.close();
 			} catch (IOException e) {
-				logger.error(e);
+				if (logger.isErrorEnabled()) {
+					logger.error("关闭输出流失败!", e);
+				}
 			}
 		}
 	}
@@ -361,17 +370,23 @@ public class SSHClientDevTty {
 				outs.write(execCommand.trim().getBytes());
 				outs.write("\n".getBytes());
 			} catch (IOException e) {
-				logger.error(e);
+				if (logger.isErrorEnabled()) {
+					logger.error("写输出流失败！", e);
+				}
 			} finally {
 				try {
 					outs.flush();
 				} catch (IOException e) {
-					logger.error(e);
+					if (logger.isErrorEnabled()) {
+						logger.error("写输出流失败！", e);
+					}
 				}
 			}
 		} else {
 			// throw new NullPointerException("会话对象[Session]为空!");
-			logger.error("会话对象[Session]为空!");
+			if (logger.isErrorEnabled()) {
+				logger.error("会话对象[Session]为空!");
+			}
 		}
 	}
 }
